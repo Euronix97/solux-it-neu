@@ -1,0 +1,8 @@
+/check.ps1
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: no-cache
+
+/Solux-PC-Check.cmd
+  Content-Type: application/octet-stream
+  Content-Disposition: attachment; filename="Solux-PC-Check.cmd"
+  Cache-Control: no-cache
