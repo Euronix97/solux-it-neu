@@ -3075,7 +3075,7 @@ a img.button-image-icon,button img.button-image-icon{display:inline-block;width:
 @media(max-width:600px){.site-header .site-brand .site-brand-image{width:157px}}
 @media(max-width:360px){.site-header .site-brand .site-brand-image{width:139px}}
 
-/* ===== VORSCHAU-DESIGN (Branch vorschau-design, nicht live) ===== */
+/* ===== Kompakte Startseite + Kontaktleiste (13.11.2026) ===== */
 
 /* 1. Leistungen: kompakte Kacheln statt großer Bildkarten */
 body.home-entry-refined .services-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important;gap:22px!important}
@@ -3104,10 +3104,15 @@ body.home-entry-refined .rate-row h3{font-size:18px}
 body.home-entry-refined .rate-row p{font-size:13.5px;line-height:1.6}
 body.home-entry-refined .rate-surcharge-note{display:none}
 body.home-entry-refined .rate-amount strong{font-size:26px}
-body.home-entry-refined .rate-ledger::after{content:"Notfall- und Wochenendeinsätze nach Verfügbarkeit und vorheriger Absprache: einmalig +50 % auf die Arbeitszeit.";grid-column:1/-1;font-size:13px;color:#526677;padding-top:4px}
 
-/* 3. Betreuungspakete: von der Startseite auf die Unterseiten (Websites / Automatisierung) */
-body.home-entry-refined .care-section{display:none}
+/* 3. Betreuungspakete: auf der Startseite zugeklappt (Bedingungen bleiben unter #betreuung erreichbar) */
+body.home-entry-refined .care-section{padding-block:28px!important}
+.care-collapse>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;font-weight:600;font-size:17px;color:#071629;padding:16px 20px;border:1px solid #dce7ed;border-radius:12px;background:#fff}
+.care-collapse>summary::-webkit-details-marker{display:none}
+.care-collapse>summary::after{content:"+";font-size:22px;line-height:1;color:#087fa7}
+.care-collapse[open]>summary::after{content:"\2013"}
+.care-collapse[open]>summary{margin-bottom:32px}
+.care-collapse>summary:focus-visible{outline:2px solid #087fa7;outline-offset:3px}
 
 /* 4. Handy: feste Kontaktleiste unten */
 .mobile-contact-bar{display:none}
@@ -3141,3 +3146,6 @@ body.home-entry-refined .care-section{display:none}
   body.home-entry-refined .services-grid > .service-card:last-child:nth-child(odd) .service-card-media{aspect-ratio:21/9!important}
   body.home-entry-refined .rate-ledger > .rate-row:last-child:nth-child(odd){grid-column:1/-1}
 }
+/* Zuschlag-Hinweis einmal unter den Preiskarten, Telefon im Kontaktblock */
+.rate-shared-note{margin:14px 0 0;font-size:13px;color:#526677}
+.enquiry-phone{display:block;margin-top:2px}
