@@ -38,7 +38,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$ScriptVersion = '1.1.3'
+$ScriptVersion = '1.1.4'
 $SchemaVersion = 1
 
 # Einstellungen für Verteilung und Rücklauf. Leer = Funktion aus.
@@ -1150,15 +1150,27 @@ function Open-MailFallback($folder, $selectPath) {
     try { Start-Process -FilePath 'explorer.exe' -ArgumentList ('/select,"' + $selectPath + '"') } catch { }
 }
 
+# PDF über einen Chromium-Browser im Hintergrund: zuerst Edge (fast immer vorhanden), sonst Chrome.
+# Eigenes leeres Profil, damit sich der Aufruf nicht an ein offenes Browserfenster des Kunden hängt.
 function Export-Pdf($htmlPath, $pdfPath) {
-    $edge = $null
-    foreach ($c in @((Join-Path ${env:ProgramFiles(x86)} 'Microsoft\Edge\Application\msedge.exe'), (Join-Path $env:ProgramFiles 'Microsoft\Edge\Application\msedge.exe'))) { if ($c -and (Test-Path $c)) { $edge = $c; break } }
-    if (-not $edge) { return $false }
+    $candidates = @()
+    foreach ($base in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
+        if ($base) { $candidates += (Join-Path $base 'Microsoft\Edge\Application\msedge.exe') }
+    }
+    foreach ($base in @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA)) {
+        if ($base) { $candidates += (Join-Path $base 'Google\Chrome\Application\chrome.exe') }
+    }
+    $browser = $null
+    foreach ($c in $candidates) { if (Test-Path $c) { $browser = $c; break } }
+    if (-not $browser) { return $false }
     $uri = 'file:///' + (($htmlPath -replace '\\', '/') -replace ' ', '%20')
+    $profileDir = Join-Path $env:TEMP ('SoluxPdf-' + (Get-Random))
     try {
-        $proc = Start-Process -FilePath $edge -ArgumentList @('--headless', '--disable-gpu', '--no-first-run', '--no-pdf-header-footer', ('--print-to-pdf="' + $pdfPath + '"'), $uri) -WindowStyle Hidden -PassThru -ErrorAction Stop
+        $proc = Start-Process -FilePath $browser -ArgumentList @('--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+            ('--user-data-dir="' + $profileDir + '"'), '--no-pdf-header-footer', ('--print-to-pdf="' + $pdfPath + '"'), $uri) -WindowStyle Hidden -PassThru -ErrorAction Stop
         Wait-Process -Id $proc.Id -Timeout 40 -ErrorAction SilentlyContinue
     } catch { return $false }
+    finally { Remove-Item -LiteralPath $profileDir -Recurse -Force -ErrorAction SilentlyContinue }
     return (Test-Path $pdfPath)
 }
 
