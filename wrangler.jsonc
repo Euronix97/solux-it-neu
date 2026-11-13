@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "solux-it-neu",
+  "compatibility_date": "2026-11-10",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": ".",
+    // Unbekannte Adressen bekommen die eigene 404.html (mit Status 404) statt einer leeren Seite.
+    "not_found_handling": "404-page"
+  }
+}
