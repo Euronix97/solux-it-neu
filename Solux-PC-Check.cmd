@@ -52,7 +52,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$ScriptVersion = '1.1.0'
+$ScriptVersion = '1.1.1'
 $SchemaVersion = 1
 
 # Einstellungen für Verteilung und Rücklauf. Leer = Funktion aus.
@@ -161,7 +161,8 @@ function Cim($class, $ns, $filter) {
     $p = @{ ClassName = $class; ErrorAction = 'Stop'; OperationTimeoutSec = 20 }
     if ($ns) { $p.Namespace = $ns }
     if ($filter) { $p.Filter = $filter }
-    try { @(Get-CimInstance @p) } catch { @() }
+    # Komma: Array nicht entpacken. Eine einzelne CimInstance hat in PS 5.1 kein .Count.
+    try { return ,@(Get-CimInstance @p) } catch { return ,@() }
 }
 
 function RegVal($path, $name) {
@@ -169,10 +170,14 @@ function RegVal($path, $name) {
 }
 
 # Ereignisse über wevtutil (XML) statt Get-WinEvent: liefert benannte Datenfelder ohne Methodenaufrufe.
+# Ausgabe als UTF-16 in eine Datei: so bleiben Umlaute unabhängig von der Konsolen-Codepage erhalten.
 function Get-Ev($log, $xpath, $max) {
-    $raw = & wevtutil.exe qe $log "/q:$xpath" /f:xml "/c:$max" /rd:true 2>$null
-    if (-not $raw) { return }
-    $all = $raw -join ''
+    $tmp = Join-Path $env:TEMP ('SoluxEv-' + (Get-Random) + '.xml')
+    & cmd.exe /c "wevtutil.exe qe `"$log`" /q:`"$xpath`" /f:xml /c:$max /rd:true /uni:true > `"$tmp`" 2>nul"
+    $all = ''
+    try { $all = Get-Content -LiteralPath $tmp -Raw -Encoding Unicode -ErrorAction Stop } catch { }
+    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+    if (-not $all) { return }
     foreach ($p in ($all -split '</Event>')) {
         if ($p -notmatch '<EventID[^>]*>(\d+)<') { continue }
         $ev = @{ Id = [int]$Matches[1]; Time = $null; Provider = ''; Level = 0; Data = @{}; Values = @() }
@@ -461,6 +466,19 @@ function Collect-Battery {
     foreach ($x in (Cim 'BatteryStaticData' 'root/WMI')) { $design += [double]$x.DesignedCapacity }
     foreach ($x in (Cim 'BatteryFullChargedCapacity' 'root/WMI')) { $full += [double]$x.FullChargedCapacity }
     foreach ($x in (Cim 'BatteryCycleCount' 'root/WMI')) { if ([int]$x.CycleCount -gt 0) { $cycles = [int]$x.CycleCount } }
+    # Ohne Adminrechte liefert root/WMI oft nichts: Akkubericht von powercfg geht auch so.
+    if ($design -le 0 -or $full -le 0) {
+        $tmp = Join-Path $env:TEMP ('SoluxBat-' + (Get-Random) + '.xml')
+        & powercfg.exe /batteryreport /xml /output $tmp 2>$null | Out-Null
+        $xml = ''
+        try { $xml = Get-Content -LiteralPath $tmp -Raw -Encoding UTF8 -ErrorAction Stop } catch { }
+        Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+        $d2 = 0; $f2 = 0
+        foreach ($m in [regex]::Matches($xml, '<DesignCapacity>(\d+)<')) { $d2 += [double]$m.Groups[1].Value }
+        foreach ($m in [regex]::Matches($xml, '<FullChargeCapacity>(\d+)<')) { $f2 += [double]$m.Groups[1].Value }
+        if ($d2 -gt 0 -and $f2 -gt 0) { $design = $d2; $full = $f2 }
+        if ($null -eq $cycles -and $xml -match '<CycleCount>(\d+)<' -and [int]$Matches[1] -gt 0) { $cycles = [int]$Matches[1] }
+    }
     $b.designmWh = $design; $b.fullmWh = $full; $b.cycles = $cycles
     $b.healthPct = $null
     if ($design -gt 0 -and $full -gt 0) { $b.healthPct = R1 ($full / $design * 100) }
@@ -532,9 +550,15 @@ function Collect-Updates {
     $u.lastSuccess = $null
     if ($ok.Count -gt 0) { $u.lastSuccess = $ok[0].Time }
     $fail = @(Get-Ev 'System' (XQ @('Microsoft-Windows-WindowsUpdateClient') @(20) 30) 100)
-    $u.failures = $fail.Count
+    # Store-Apps (Titel beginnt mit 12-stelliger Produkt-ID) und Defender-Signaturen scheitern oft und holen sich selbst nach: nicht mitzählen.
+    $u.failures = 0; $u.ignoredFailures = 0
     $names = @{}
-    foreach ($e in $fail) { $n = [string]$e.Data['updateTitle']; if ($n) { if ($names.ContainsKey($n)) { $names[$n]++ } else { $names[$n] = 1 } } }
+    foreach ($e in $fail) {
+        $n = [string]$e.Data['updateTitle']
+        if ($n -cmatch '^[0-9A-Z]{12}-' -or $n -match 'KB2267602') { $u.ignoredFailures++; continue }
+        $u.failures++
+        if ($n) { if ($names.ContainsKey($n)) { $names[$n]++ } else { $names[$n] = 1 } }
+    }
     $u.failedUpdates = @(); foreach ($k in $names.Keys) { $u.failedUpdates += [ordered]@{ title = $k; count = $names[$k] } }
     $svc = (Cim 'Win32_Service' $null "Name='wuauserv'")
     $u.serviceStart = ''; if ($svc.Count) { $u.serviceStart = [string]$svc[0].StartMode }
@@ -614,7 +638,7 @@ function Collect-Software {
         $sw.topMemory += [ordered]@{ name = [string]$p.ProcessName; mb = [int]($p.WorkingSet64 / 1MB) }
     }
     $sw.topCpu = @()
-    foreach ($p in (Cim 'Win32_PerfFormattedData_PerfProc_Process' | Where-Object { $_.Name -ne '_Total' -and $_.Name -ne 'Idle' } | Sort-Object PercentProcessorTime -Descending | Select-Object -First 5)) {
+    foreach ($p in ((Cim 'Win32_PerfFormattedData_PerfProc_Process') | Where-Object { $_.Name -ne '_Total' -and $_.Name -ne 'Idle' } | Sort-Object PercentProcessorTime -Descending | Select-Object -First 5)) {
         $sw.topCpu += [ordered]@{ name = [string]$p.Name; pct = [int]$p.PercentProcessorTime }
     }
 }
@@ -678,8 +702,8 @@ function Collect-Network {
             elseif ($l -match '^\s*(Empfangsrate \(MBit/s\)|Receive rate \(Mbps\))\s*:\s*([\d\.,]+)') { $w.rxMbps = $Matches[2] }
             elseif ($l -match '^\s*(Status|State)\s*:\s*(.+)$') { $w.state = $Matches[2].Trim() }
         }
-        if ($w.Contains('signal')) {
-            if (-not $w.Contains('band') -and $w.Contains('channel')) { if ($w.channel -le 14) { $w.band = '2,4 GHz' } else { $w.band = '5 GHz oder höher' } }
+        if ($null -ne $w['signal']) {
+            if ($null -eq $w['band'] -and $null -ne $w['channel']) { if ($w.channel -le 14) { $w.band = '2,4 GHz' } else { $w.band = '5 GHz oder höher' } }
             $n.wlan = $w
         }
     }
@@ -1153,7 +1177,7 @@ function Export-Pdf($htmlPath, $pdfPath) {
 
 function Get-SymptomFindings {
     $areas = @()
-    foreach ($k in $script:D.customer.symptoms) { if ($script:SymptomInfo.Contains($k)) { $areas += $script:SymptomInfo[$k].areas } }
+    foreach ($k in $script:D.customer.symptoms) { if ($null -ne $script:SymptomInfo[$k]) { $areas += $script:SymptomInfo[$k].areas } }
     $res = @()
     foreach ($f in (Sort-Findings $script:Findings)) { if ($areas -contains $f.area -and $f.customer) { $res += $f } }
     $res
@@ -1198,7 +1222,7 @@ function Build-Html($verdict, $recs) {
     if ($cu.name -or $cu.code) { $o += '<div class="meta">Für: ' + (Esc $cu.name) + $(if ($cu.code) { ' &middot; Kundencode ' + (Esc $cu.code) } else { '' }) + '</div>' }
     $o += '<div class="verdict ' + $verdict.level + '"><b>' + (Esc $verdict.title) + '</b>' + (Esc $verdict.text) + '</div>'
     if ($cu.symptoms.Count -gt 0) {
-        $labels = @(); foreach ($k in $cu.symptoms) { if ($script:SymptomInfo.Contains($k)) { $labels += $script:SymptomInfo[$k].label } }
+        $labels = @(); foreach ($k in $cu.symptoms) { if ($null -ne $script:SymptomInfo[$k]) { $labels += $script:SymptomInfo[$k].label } }
         $o += '<h2>Zu Ihrem Anliegen</h2><p>Sie haben angegeben: <b>' + (Esc ($labels -join ', ')) + '</b>.</p>'
         $sf = @(Get-SymptomFindings)
         if ($sf.Count -gt 0) {
