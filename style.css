@@ -3074,3 +3074,70 @@ a img.button-image-icon,button img.button-image-icon{display:inline-block;width:
 @media(max-width:1100px){.site-header .site-brand .site-brand-image{width:165px}}
 @media(max-width:600px){.site-header .site-brand .site-brand-image{width:157px}}
 @media(max-width:360px){.site-header .site-brand .site-brand-image{width:139px}}
+
+/* ===== VORSCHAU-DESIGN (Branch vorschau-design, nicht live) ===== */
+
+/* 1. Leistungen: kompakte Kacheln statt großer Bildkarten */
+body.home-entry-refined .services-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important;gap:22px!important}
+body.home-entry-refined .services-grid .service-card,
+body.home-entry-refined .services-grid .service-advice-feature,
+body.home-entry-refined .services-grid .service-automation{grid-column:auto!important;display:flex!important;flex-direction:column;gap:0;border:1px solid #dce7ed;border-radius:12px;overflow:hidden;background:#fff;transition:border-color .2s ease,box-shadow .2s ease}
+body.home-entry-refined .services-grid .service-card:hover{border-color:#8fc3d6;box-shadow:0 10px 28px #0716290f}
+body.home-entry-refined .services-grid .service-card-media,
+body.home-entry-refined .services-grid .service-advice-feature .service-card-media,
+body.home-entry-refined .services-grid .service-automation .service-card-media{aspect-ratio:16/9!important;max-height:none!important;width:100%!important;margin:0!important;border-radius:0!important}
+body.home-entry-refined .services-grid .service-card-content,
+body.home-entry-refined .services-grid .service-advice-feature .service-card-content,
+body.home-entry-refined .services-grid .service-automation .service-card-content{padding:16px 18px 18px!important}
+body.home-entry-refined .services-grid .service-card-content h3{font-size:19px;margin:0 0 6px}
+body.home-entry-refined .services-grid .service-card-content p{font-size:14px;line-height:1.55;margin:0 0 10px}
+body.home-entry-refined .services-group + .services-group{margin-top:44px}
+
+/* Ruhiger Platzhalter in Markenfarbe, solange ein Bild lädt */
+.service-card-media{background:linear-gradient(135deg,#e8f2f7,#d3e6ef)}
+
+/* 2. Preise: Karten nebeneinander, Zuschlag nur einmal erwähnt */
+body.home-entry-refined .rate-ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;border-top:0}
+body.home-entry-refined .rate-row{display:flex!important;flex-direction:column;gap:12px;padding:22px!important;border:1px solid #dce7ed!important;border-radius:12px;background:#fff}
+body.home-entry-refined .rate-row > div:first-child{flex:1}
+body.home-entry-refined .rate-row h3{font-size:18px}
+body.home-entry-refined .rate-row p{font-size:13.5px;line-height:1.6}
+body.home-entry-refined .rate-surcharge-note{display:none}
+body.home-entry-refined .rate-amount strong{font-size:26px}
+body.home-entry-refined .rate-ledger::after{content:"Notfall- und Wochenendeinsätze nach Verfügbarkeit und vorheriger Absprache: einmalig +50 % auf die Arbeitszeit.";grid-column:1/-1;font-size:13px;color:#526677;padding-top:4px}
+
+/* 3. Betreuungspakete: von der Startseite auf die Unterseiten (Websites / Automatisierung) */
+body.home-entry-refined .care-section{display:none}
+
+/* 4. Handy: feste Kontaktleiste unten */
+.mobile-contact-bar{display:none}
+@media(max-width:760px){
+  .mobile-contact-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:fixed;left:0;right:0;bottom:0;z-index:50;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#071629f2;backdrop-filter:blur(8px);box-shadow:0 -8px 24px #0716292e}
+  .mobile-contact-bar a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:9px;font-weight:700;font-size:15px;text-decoration:none}
+  .mobile-contact-bar .mcb-call{background:#fff;color:#071629}
+  .mobile-contact-bar .mcb-request{background:#4fb8e6;color:#071629}
+  body{padding-bottom:72px}
+  /* Leistungen auf dem Handy zweispaltig und knapp */
+  body.home-entry-refined .services-grid{grid-template-columns:1fr 1fr!important;gap:12px!important}
+  body.home-entry-refined .services-grid .service-card-media{aspect-ratio:4/3!important}
+  body.home-entry-refined .services-grid .service-card-content{padding:11px 12px 13px!important}
+  body.home-entry-refined .services-grid .service-card-content h3{font-size:15px;line-height:1.3}
+  body.home-entry-refined .services-grid .service-card-content p{display:none}
+  body.home-entry-refined .services-grid .service-card-link{font-size:13px}
+  body.home-entry-refined .rate-ledger{grid-template-columns:1fr 1fr;gap:10px}
+  body.home-entry-refined .rate-row{padding:15px!important;gap:8px}
+  body.home-entry-refined .rate-row p{display:none}
+  body.home-entry-refined .rate-row h3{font-size:15px}
+  body.home-entry-refined .rate-amount strong{font-size:21px}
+}
+
+/* Feinschliff Raster: keine einzelnen Karten in einer Reihe */
+@media(min-width:1101px){body.home-entry-refined #it-service .services-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}}
+@media(min-width:761px) and (max-width:1100px){body.home-entry-refined #it-service .services-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(min-width:761px){body.home-entry-refined #digitale-loesungen .services-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.home-entry-refined #digitale-loesungen .services-grid .service-card-media{aspect-ratio:21/9!important}}
+@media(max-width:760px){
+  body.home-entry-refined .services-grid > .service-card:last-child:nth-child(odd){grid-column:1/-1!important}
+  body.home-entry-refined .services-grid > .service-card:last-child:nth-child(odd) .service-card-media{aspect-ratio:21/9!important}
+  body.home-entry-refined .rate-ledger > .rate-row:last-child:nth-child(odd){grid-column:1/-1}
+}

@@ -173,6 +173,8 @@
   "Zurück zur Startseite": "Back to home",
   "RECHTLICHE ANGABEN": "LEGAL INFORMATION",
   "Datenschutz": "Privacy Policy",
+  "Unsere Werkzeuge": "Our tools",
+  "Anrufen": "Call",
   "Stand: November 2026": "Last updated: November 2026",
   "1. Verantwortliche Stelle": "1. Data controller",
   "Inhaber: Marcel Bux": "Owner: Marcel Bux",
