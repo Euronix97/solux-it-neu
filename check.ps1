@@ -1,6 +1,6 @@
 <#
   Solux PC-Check (Skript-Variante)
-  Solux IT - Marcel Bux & Oscar Oblong - Thalhauser Weg 6 - 51674 Wiehl - info@solux-it.de
+  Solux IT - Marcel Bux - Thalhauser Weg 6 - 51674 Wiehl - info@solux-it.de
 
   Läuft ohne Installation mit Windows PowerShell 5.1. Das Skript liest nur und ändert nichts.
   Es ist bewusst für den eingeschränkten Sprachmodus (Constrained Language Mode) geschrieben:
@@ -38,7 +38,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$ScriptVersion = '1.1.2'
+$ScriptVersion = '1.1.3'
 $SchemaVersion = 1
 
 # Einstellungen für Verteilung und Rücklauf. Leer = Funktion aus.
@@ -47,7 +47,7 @@ $Config = @{
     UploadToken = ''                                # gemeinsamer Schlüssel, Header X-Solux-Token
     VersionUrl  = ''                                # Textdatei mit aktueller Versionsnummer, z. B. https://solux-it.de/check-version.txt
     SelfUrl     = 'https://solux-it.de/check.ps1'      # Quelle des Skripts für den Einzeiler (für Neustart mit Adminrechten)
-    Phone       = ''                                # Telefonnummer für Fenster und Bericht
+    Phone       = '01520 6943576'                   # Telefonnummer für Fenster und Bericht
     MaxUploadKB = 2048
 }
 $ThermalSamples = 6
@@ -55,7 +55,7 @@ $PingCount = 10
 
 $Solux = [ordered]@{
     name    = 'Solux IT'
-    people  = 'Marcel Bux & Oscar Oblong'
+    people  = 'Marcel Bux'
     street  = 'Thalhauser Weg 6'
     city    = '51674 Wiehl'
     mail    = 'info@solux-it.de'
