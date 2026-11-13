@@ -52,7 +52,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$ScriptVersion = '1.1.1'
+$ScriptVersion = '1.1.2'
 $SchemaVersion = 1
 
 # Einstellungen für Verteilung und Rücklauf. Leer = Funktion aus.
@@ -806,7 +806,8 @@ function Evaluate {
             elseif ($d.wear -ge $T.WearWarn) { Add-Finding 'Datenträger' 'warnung' ('SSD-Verschleiß hoch: ' + $nm) ('Verbrauchte Lebensdauer ' + $d.wear + ' %.') 'Ihre SSD ist stark beansprucht. Ein Austausch sollte eingeplant werden.' 'disk' 'in den nächsten Wochen' }
         }
         if ($d.readErrors -gt 0) { Add-Finding 'Datenträger' 'warnung' ('Lesefehler: ' + $nm) ('' + $d.readErrors + ' nicht korrigierbare Lesefehler.') 'Ein Laufwerk hatte Lesefehler.' 'disk' 'in den nächsten Wochen' }
-        if ($d.tempMax -ge $T.DiskTempWarn) { Add-Finding 'Datenträger' 'hinweis' ('Laufwerk war heiß: ' + $nm) ('Maximaltemperatur ' + $d.tempMax + ' °C.') '' $null '' }
+        # TemperatureMax ist bei NVMe meist der Warn-Grenzwert des Herstellers, kein Messwert: nur die aktuelle Temperatur bewerten.
+        if ($d.temp -ge $T.DiskTempWarn) { Add-Finding 'Datenträger' 'hinweis' ('Laufwerk heiß: ' + $nm) ('Aktuell ' + $d.temp + ' °C (Grenzwert laut Laufwerk: ' + (OrUnknown $d.tempMax ' °C') + ').') '' $null '' }
     }
     if ($st.severeDiskEvents -gt 0) {
         $sev = 'warnung'; if ($st.severeDiskEvents -ge 5) { $sev = 'kritisch' }
@@ -1294,7 +1295,7 @@ function Build-Html($verdict, $recs) {
         $o += '</table>'
     }
     $st = $script:D.storage
-    $o += '<h2>Datenträger</h2><table><tr><th>Laufwerk</th><th>Größe</th><th>Zustand</th><th>Verschleiß</th><th>Temp. (max)</th><th>Stunden</th><th>Lesefehler</th></tr>'
+    $o += '<h2>Datenträger</h2><table><tr><th>Laufwerk</th><th>Größe</th><th>Zustand</th><th>Verschleiß</th><th>Temp. (Grenze)</th><th>Stunden</th><th>Lesefehler</th></tr>'
     foreach ($d in $st.disks) {
         $nm = $d.name + ' (' + $d.bus + ', ' + $d.media + ')'; if ($d.external) { $nm += ' extern' }
         $o += '<tr><td>' + (Esc $nm) + '<br><span class="meta">SN ' + (Esc $d.serial) + ' &middot; FW ' + (Esc $d.firmware) + '</span></td><td>' + (Esc $d.sizeGB) + ' GB</td><td>' + (Esc $d.health) + '</td><td>' + (Esc (OrUnknown $d.wear ' %')) + '</td><td>' + (Esc (OrUnknown $d.temp ' °C')) + ' (' + (Esc (OrUnknown $d.tempMax ' °C')) + ')</td><td>' + (Esc (OrUnknown $d.hours ' h')) + '</td><td>' + (Esc (OrUnknown $d.readErrors '')) + '</td></tr>'
@@ -1475,7 +1476,7 @@ function Run-SelfTest {
 
     # Gesundes System: keine Befunde über "hinweis"
     $script:D.system.isWin10 = $false; $script:D.system.build = 26200; $script:D.system.displayVersion = '25H2'; $script:D.system.supportEnd = [datetime]'2027-10-12'; $script:D.system.uptimeDays = 1; $script:D.system.pendingReboot = $false
-    $script:D.storage.volumes[0].freeGB = 120; $script:D.storage.volumes[0].freePct = 50; $script:D.storage.disks[0].wear = 3; $script:D.storage.disks[0].tempMax = 50; $script:D.storage.disks[0].hours = 800; $script:D.storage.userTempGB = 0.4
+    $script:D.storage.volumes[0].freeGB = 120; $script:D.storage.volumes[0].freePct = 50; $script:D.storage.disks[0].wear = 3; $script:D.storage.disks[0].temp = 37; $script:D.storage.disks[0].tempMax = 80; $script:D.storage.disks[0].hours = 800; $script:D.storage.userTempGB = 0.4
     $script:D.thermal.cpuTempMax = 47; $script:D.thermal.cpuLoadAvg = 37; $script:D.thermal.cpuPerfAvg = 99
     $script:D.battery.healthPct = 95
     $script:D.stability = [ordered]@{ kp41 = @(); powerButton = 0; withBugcheck = 0; inSleep = 0; unexplained = 0; unexpected6008 = 0; bsods = @(); wheaFatal = 0; wheaCorrected = 0; tdr = 0; appCrashes = 1; appHangs = 0; topApps = @(); stabilityIndex = 9.1; bootSeconds = 25; startupItems = @('OneDrive'); memDiag = ''; crashDumps = $true; minidumps = @() }
@@ -1489,6 +1490,10 @@ function Run-SelfTest {
     $bad = @(); foreach ($f in $script:Findings) { if ($f.severity -ne 'hinweis') { $bad += $f.title } }
     Assert ($bad.Count -eq 0) ('Gesundes System ohne Warnungen' + $(if ($bad.Count) { ': ' + ($bad -join ', ') } else { '' }))
     Assert (-not (HasFinding 'heiß' $null)) '47 °C bei 37 % gilt nicht als heiß'
+    Assert (-not (HasFinding 'Laufwerk heiß' $null)) 'SSD-Grenzwert 80 °C bei 37 °C ist kein Befund'
+    $script:D.storage.disks[0].temp = 75; Evaluate
+    Assert (HasFinding 'Laufwerk heiß' 'hinweis') 'SSD aktuell 75 °C = Hinweis'
+    $script:D.storage.disks[0].temp = 37; Evaluate
     if ($OutDir) {
         $script:D.meta.reportId = 'SOL-NEU'
         Compare-Previous $OutDir
