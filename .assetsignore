@@ -1,0 +1,6 @@
+# Nicht öffentlich ausliefern (Repo-/Build-Dateien)
+README.md
+.gitignore
+.gitattributes
+.assetsignore
+wrangler.jsonc
