@@ -52,7 +52,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$ScriptVersion = '1.1.4'
+$ScriptVersion = '1.1.5'
 $SchemaVersion = 1
 
 # Einstellungen für Verteilung und Rücklauf. Leer = Funktion aus.
@@ -113,23 +113,23 @@ $T = @{
     TempJunkGB        = 5
 }
 
-# Leistungsbausteine. Preise pflegt Solux; bis dahin "Preis auf Anfrage".
+# Leistungsbausteine mit Preisangaben wie auf solux-it.de (Leistungsseiten).
 $Services = @{
-    clean    = @{ title = 'Innenreinigung und neue Wärmeleitpaste'; price = 'Preis auf Anfrage' }
-    disk     = @{ title = 'SSD-Tausch inklusive Datenumzug';        price = 'Preis auf Anfrage' }
-    backup   = @{ title = 'Automatische Datensicherung einrichten'; price = 'Preis auf Anfrage' }
-    win11    = @{ title = 'Umstieg auf Windows 11 inklusive Daten'; price = 'Preis auf Anfrage' }
-    newpc    = @{ title = 'Beratung zum Neugerät';                  price = 'kostenlos' }
-    cleanup  = @{ title = 'Systembereinigung und Speicher freigeben'; price = 'Preis auf Anfrage' }
-    startup  = @{ title = 'Systemstart beschleunigen';              price = 'Preis auf Anfrage' }
-    driver   = @{ title = 'Treiber prüfen und aktualisieren';       price = 'Preis auf Anfrage' }
-    updates  = @{ title = 'Windows-Updates reparieren';             price = 'Preis auf Anfrage' }
-    security = @{ title = 'Sicherheits-Check und Virenschutz einrichten'; price = 'Preis auf Anfrage' }
-    battery  = @{ title = 'Akkutausch';                             price = 'Preis auf Anfrage' }
-    ram      = @{ title = 'Arbeitsspeicher aufrüsten';              price = 'Preis auf Anfrage' }
-    network  = @{ title = 'WLAN und Internetverbindung optimieren'; price = 'Preis auf Anfrage' }
-    stability= @{ title = 'Absturzursache vor Ort eingrenzen';      price = 'Preis auf Anfrage' }
-    office   = @{ title = 'Office auf eine unterstützte Version umstellen'; price = 'Preis auf Anfrage' }
+    clean    = @{ title = 'Innenreinigung und neue Wärmeleitpaste'; price = 'vor Ort oder in der Werkstatt, 59 € je Stunde' }
+    disk     = @{ title = 'SSD-Tausch inklusive Datenumzug';        price = 'vor Ort oder in der Werkstatt, 59 € je Stunde zzgl. SSD' }
+    backup   = @{ title = 'Automatische Datensicherung einrichten'; price = 'per Fernwartung, 29 € je 30 Minuten' }
+    win11    = @{ title = 'Umstieg auf Windows 11 inklusive Daten'; price = 'per Fernwartung oder vor Ort, nach Aufwand' }
+    newpc    = @{ title = 'Beratung zum Neugerät';                  price = 'Beratung kostenlos, Einrichtung eines Neugeräts ab 89 €' }
+    cleanup  = @{ title = 'Systembereinigung und Speicher freigeben'; price = 'per Fernwartung, 29 € je 30 Minuten' }
+    startup  = @{ title = 'Systemstart beschleunigen';              price = 'per Fernwartung, 29 € je 30 Minuten' }
+    driver   = @{ title = 'Treiber prüfen und aktualisieren';       price = 'per Fernwartung, 29 € je 30 Minuten' }
+    updates  = @{ title = 'Windows-Updates reparieren';             price = 'per Fernwartung, 29 € je 30 Minuten' }
+    security = @{ title = 'Sicherheits-Check und Virenschutz einrichten'; price = 'per Fernwartung, 29 € je 30 Minuten' }
+    battery  = @{ title = 'Akkutausch';                             price = 'vor Ort oder in der Werkstatt, 59 € je Stunde zzgl. Akku' }
+    ram      = @{ title = 'Arbeitsspeicher aufrüsten';              price = 'vor Ort oder in der Werkstatt, 59 € je Stunde zzgl. Speicher' }
+    network  = @{ title = 'WLAN und Internetverbindung optimieren'; price = 'vor Ort, 59 € je Stunde' }
+    stability= @{ title = 'Absturzursache vor Ort eingrenzen';      price = 'vor Ort oder in der Werkstatt, 59 € je Stunde' }
+    office   = @{ title = 'Office auf eine unterstützte Version umstellen'; price = 'per Fernwartung, 29 € je 30 Minuten' }
 }
 
 $Unwanted = @('driver booster','driver easy','drivermax','driver support','driverfix','ccleaner','advanced systemcare','iobit',
@@ -1005,24 +1005,10 @@ function Show-Intro {
     Line ''
     Line '  - Es liest nur Systeminformationen und verändert nichts.'
     Line '  - Persönliche Dateien, Passwörter und Browserverlauf werden nicht gelesen.'
-    Line '  - Der Bericht bleibt auf Ihrem PC. Erst am Ende fragen wir,'
-    Line '    ob er an Solux IT gesendet werden soll.'
+    Line '  - Sie müssen nichts eingeben. Der Bericht bleibt auf Ihrem PC,'
+    Line '    am Ende entscheiden Sie, ob Sie ihn an Solux IT senden.'
     Line ''
     $null = Read-Host '   Weiter mit Enter (Abbrechen mit Strg+C)'
-}
-
-function Ask-Customer {
-    Write-Host ''
-    Line 'Damit wir den Bericht zuordnen können (alles freiwillig, Enter = überspringen):' 'Cyan'
-    if (-not $script:CustName) { $script:CustName = Clean (Read-Host '   Ihr Name') 60 }
-    if (-not $script:CustPhone) { $script:CustPhone = Clean (Read-Host '   Telefon für Rückfragen') 30 }
-    if (-not $script:Symptoms) {
-        Write-Host ''
-        Line 'Was stört Sie an Ihrem PC? (mehrere mit Komma, z. B. 1,3)' 'Cyan'
-        $i = 1
-        foreach ($k in $script:SymptomInfo.Keys) { Line ('  ' + $i + '  ' + $script:SymptomInfo[$k].label); $i++ }
-        $script:Symptoms = (Parse-Symptoms (Read-Host '   Auswahl')) -join ','
-    }
 }
 
 function Ask-YesNo($question, $default) {
@@ -1200,25 +1186,101 @@ function Get-SymptomFindings {
 # Bericht
 # ---------------------------------------------------------------------------
 $Css = @'
-:root{--ink:#14181f;--muted:#5b6472;--line:#d9dde3;--paper:#ffffff;--ok:#1f7a4d;--warn:#b26a00;--crit:#b3261e;--accent:#0b4f8a}
-*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
-.page{max-width:900px;margin:24px auto;background:var(--paper);padding:40px 48px;border:1px solid var(--line)}
-h1,h2,h3{font-family:Bahnschrift,"Segoe UI",sans-serif;font-weight:600;letter-spacing:.01em}
-h1{font-size:30px;margin:0 0 4px}h2{font-size:19px;margin:32px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--ink)}h3{font-size:15px;margin:20px 0 6px}
-.brand{font-family:Bahnschrift,sans-serif;font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent)}
-.meta{color:var(--muted);font-size:13px}
-.verdict{margin:24px 0;padding:18px 22px;border-left:8px solid var(--ok);background:#f2f8f5}
-.verdict.warnung{border-color:var(--warn);background:#fdf6ec}.verdict.kritisch{border-color:var(--crit);background:#fcefee}
-.verdict b{font-family:Bahnschrift,sans-serif;font-size:22px;display:block}
-.tag{display:inline-block;min-width:74px;text-align:center;font:600 11px Bahnschrift,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;color:#fff;background:var(--muted)}
-.tag.kritisch{background:var(--crit)}.tag.warnung{background:var(--warn)}.tag.hinweis{background:var(--accent)}.tag.ok{background:var(--ok)}
-ul.find{list-style:none;padding:0;margin:0}ul.find li{padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline}
-.rec{border:1px solid var(--line);padding:12px 16px;margin:8px 0}.rec b{display:block}.rec span{color:var(--muted);font-size:13px}
-table{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:13px}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#f6f7f9;font-weight:600}
-.foot{margin-top:36px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
-.annex{page-break-before:always;margin-top:64px;padding-top:24px;border-top:3px double var(--line)}
-@media print{.annex{margin-top:0;padding-top:0;border:0}body{background:#fff}.page{margin:0;border:0;padding:0 8mm;max-width:none}h2{page-break-after:avoid}}
+@page{size:A4;margin:14mm 13mm}
+:root{--navy:#071629;--ink:#16222e;--muted:#5a6878;--line:#dbe3ea;--soft:#f3f7fa;--accent:#087fa7;--ok:#1f8a5b;--warn:#b26a00;--crit:#b3261e}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:#eef2f5;color:var(--ink);font:15px/1.55 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+.page{max-width:860px;margin:28px auto;background:#fff;padding:40px 52px 34px;border:1px solid var(--line)}
+h1,h2,h3{font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;color:var(--navy);font-weight:600;letter-spacing:-.01em;margin:0}
+h1{font-size:30px;line-height:1.15}
+h2{font-size:19px;margin:38px 0 12px}
+h3{font-size:12px;margin:20px 0 4px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600}
+p{margin:0 0 8px}
+a{color:var(--accent);text-decoration:none}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.top img{height:36px;width:auto;display:block}
+.top .id{text-align:right;font-size:12.5px;color:var(--muted);line-height:1.5}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.intro{margin:28px 0 0}
+.intro h1{margin-top:4px}
+.dev{color:var(--muted);font-size:14px;margin-top:6px}
+.verdict{margin:24px 0 0;padding:20px 24px;background:var(--soft);border-left:6px solid var(--ok)}
+.verdict.warnung{border-color:var(--warn)}.verdict.kritisch{border-color:var(--crit)}
+.verdict .t{font-size:25px;font-weight:600;color:var(--navy);line-height:1.2}
+.verdict .x{margin:4px 0 0}
+.verdict .n{margin-top:10px;font-size:14px;color:var(--muted)}
+.verdict .n b{font-weight:600}
+.c-kritisch{color:var(--crit)}.c-warnung{color:var(--warn)}.c-hinweis{color:var(--accent)}.c-ok{color:var(--ok)}.c-na{color:var(--muted)}
+.lead{color:var(--muted);margin:-4px 0 10px}
+table{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+table.ov{font-size:14.5px;margin:0;border-top:1px solid var(--line)}
+table.ov td{padding:11px 8px}
+table.ov .a{font-weight:600;color:var(--navy);width:29%}
+table.ov .s{width:19%;white-space:nowrap;font-weight:600}
+table.ov .d{color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;margin-right:8px;vertical-align:1px}
+.item{padding:2px 0 2px 16px;border-left:3px solid var(--line);margin:0 0 14px}
+.item.kritisch{border-color:var(--crit)}.item.warnung{border-color:var(--warn)}.item.hinweis{border-color:var(--accent)}
+.item b{color:var(--navy);font-weight:600}
+.item .ar{color:var(--muted);font-size:13px}
+.item p{margin:2px 0 0}
+ol.recs{list-style:none;counter-reset:r;margin:0;padding:0;border-top:1px solid var(--line)}
+ol.recs li{counter-increment:r;position:relative;padding:13px 0 13px 46px;border-bottom:1px solid var(--line)}
+ol.recs li::before{content:counter(r);position:absolute;left:4px;top:9px;font:600 24px/1.2 "Segoe UI Variable Display","Segoe UI",sans-serif;color:var(--accent)}
+ol.recs b{display:block;color:var(--navy);font-weight:600}
+ol.recs .w{font-size:14px;color:var(--muted)}
+ol.recs .p{font-size:14px;margin-top:2px}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.cmp .c-ok,.cmp .c-warnung{font-weight:600}
+.next{margin-top:40px;padding:22px 24px;background:var(--soft);border-top:3px solid var(--accent)}
+.next h2{margin:0 0 6px}
+.next .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.next .k{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.next .v{font-size:16px;font-weight:600;color:var(--navy)}
+.next .v a{color:var(--navy)}
+.foot{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+.meta{color:var(--muted);font-size:12.5px}
+.annex{break-before:page;page-break-before:always;margin-top:64px;padding-top:28px;border-top:1px solid var(--line)}
+.annex h2{font-size:16px;margin:28px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--navy)}
+.annex .sev{font-weight:600;white-space:nowrap}
+@media (max-width:640px){.page{margin:0;padding:22px 16px;border:0}.top{flex-direction:column;align-items:flex-start}.top .id{text-align:left}.next .cols{grid-template-columns:1fr}table.ov,table.ov tbody{display:block}table.ov tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 2px;border-bottom:1px solid var(--line)}table.ov td{border:0;padding:0}table.ov .a,table.ov .s{width:auto}table.ov .d{grid-column:1/-1}h1{font-size:25px}}
+@media print{body{background:#fff;font-size:13.5px}.page{margin:0;border:0;padding:0;max-width:none}h2{break-after:avoid;page-break-after:avoid}.item,ol.recs li,table.ov tr,.verdict,.next,tr{break-inside:avoid;page-break-inside:avoid}.annex{margin-top:0;padding-top:0;border:0}}
 '@
+
+# Logo (PNG, 440 x 130) als Base64, damit der Bericht ohne Internet vollständig ist.
+$LogoPng = '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'
+
+# Bereiche für den Überblick im Kundenbericht. ok = Satz, wenn dort nichts gefunden wurde.
+$ReportAreas = @(
+    @{ label = 'Festplatten und Speicherplatz'; areas = @('Datenträger', 'Speicher'); modules = @('storage'); ok = 'Keine Laufwerksfehler, genug freier Platz.' }
+    @{ label = 'Stabilität';                   areas = @('Stabilität', 'Hardware'); modules = @('stability', 'hardware'); ok = 'Keine auffälligen Abstürze oder Gerätefehler.' }
+    @{ label = 'Windows und Updates';          areas = @('Windows', 'Updates'); modules = @('system', 'updates'); ok = 'Windows wird unterstützt, Updates laufen.' }
+    @{ label = 'Sicherheit';                   areas = @('Sicherheit'); modules = @('security'); ok = 'Virenschutz und Firewall sind aktiv.' }
+    @{ label = 'Datensicherung';               areas = @('Datensicherung'); modules = @('backup'); ok = 'Eine Datensicherung ist eingerichtet.' }
+    @{ label = 'Kühlung und Leistung';         areas = @('Kühlung', 'Leistung'); modules = @('thermal'); ok = 'Keine Hinweise auf Überhitzung oder Bremsen.' }
+    @{ label = 'Programme';                    areas = @('Software'); modules = @('software'); ok = 'Keine unerwünschten Programme gefunden.' }
+    @{ label = 'Internet und WLAN';            areas = @('Netzwerk'); modules = @('network'); ok = 'Keine Verbindungsprobleme gemessen.' }
+    @{ label = 'Akku';                         areas = @('Akku'); modules = @('battery'); ok = 'Der Akku hat noch eine gute Kapazität.'; battery = $true }
+)
+
+function Sev-Word($sev) {
+    if ($sev -eq 'kritisch') { return 'dringend' }
+    if ($sev -eq 'warnung') { return 'beachten' }
+    if ($sev -eq 'hinweis') { return 'Hinweis' }
+    if ($sev -eq 'na') { return 'nicht geprüft' }
+    'in Ordnung'
+}
+
+function Phone-Intl($p) {
+    # 01520 6943576 -> 4915206943576 (für WhatsApp-Link)
+    $d = ([string]$p) -replace '[^0-9]', ''
+    if ($d -match '^00') { return $d.Substring(2) }
+    if ($d -match '^0') { return '49' + $d.Substring(1) }
+    $d
+}
 
 function Row($k, $v) { if ($v -is [double]) { $v = Num $v }; '<tr><th style="width:34%">' + (Esc $k) + '</th><td>' + (Esc $v) + '</td></tr>' }
 function JaNein($b) { if ($null -eq $b) { 'unbekannt' } elseif ($b) { 'ja' } else { 'nein' } }
@@ -1226,65 +1288,130 @@ function OrUnknown($v, $suffix) { if ($null -eq $v -or [string]$v -eq '') { 'nic
 
 function Build-Html($verdict, $recs) {
     $m = $script:D.meta; $s = $script:D.system; $hw = $script:D.hardware
+    $cu = $script:D.customer
+    $sorted = @(Sort-Findings $script:Findings)
+    $nK = 0; $nW = 0; $nH = 0
+    foreach ($f in $sorted) { if ($f.severity -eq 'kritisch') { $nK++ } elseif ($f.severity -eq 'warnung') { $nW++ } elseif ($f.customer) { $nH++ } }
     $o = @()
     $o += '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    $o += '<title>PC-Check ' + (Esc $m.reportId) + '</title><style>' + $script:Css + '</style></head><body><div class="page">'
-    $o += '<div class="brand">Solux IT &middot; PC-Check</div><h1>Ihr PC im Check</h1>'
-    $o += '<div class="meta">Bericht ' + (Esc $m.reportId) + ' &middot; ' + (Esc (DateTimeDe $m.created)) + ' &middot; ' + (Esc $s.manufacturer) + ' ' + (Esc $s.model) + ' &middot; ' + (Esc $s.osName) + ' ' + (Esc $s.displayVersion) + '</div>'
-    $cu = $script:D.customer
-    if ($cu.name -or $cu.code) { $o += '<div class="meta">Für: ' + (Esc $cu.name) + $(if ($cu.code) { ' &middot; Kundencode ' + (Esc $cu.code) } else { '' }) + '</div>' }
-    $o += '<div class="verdict ' + $verdict.level + '"><b>' + (Esc $verdict.title) + '</b>' + (Esc $verdict.text) + '</div>'
+    $o += '<title>PC-Check ' + (Esc $m.reportId) + ' - Solux IT</title><style>' + $script:Css + '</style></head><body><div class="page">'
+
+    # Kopf
+    $o += '<div class="top"><img src="data:image/png;base64,' + $script:LogoPng + '" alt="Solux IT" width="122" height="36">'
+    $o += '<div class="id">Bericht ' + (Esc $m.reportId) + '<br>' + (Esc (DateTimeDe $m.created)) + ' Uhr</div></div>'
+    $o += '<div class="intro"><div class="eyebrow">PC-Check</div><h1>So geht es Ihrem PC</h1>'
+    $dev = (Esc $s.manufacturer) + ' ' + (Esc $s.model) + ' &middot; ' + (Esc $s.osName) + ' ' + (Esc $s.displayVersion)
+    if ($s.computerName) { $dev += ' &middot; ' + (Esc $s.computerName) }
+    $o += '<div class="dev">' + $dev + '</div>'
+    if ($cu.name -or $cu.code) { $o += '<div class="dev">Für ' + (Esc $cu.name) + $(if ($cu.code) { $(if ($cu.name) { ' &middot; ' } else { '' }) + 'Kundencode ' + (Esc $cu.code) } else { '' }) + '</div>' }
+    $o += '</div>'
+
+    # Ergebnis
+    $cnt = @()
+    if ($nK -gt 0) { $cnt += '<b class="c-kritisch">' + $nK + ' dringend</b>' }
+    if ($nW -gt 0) { $cnt += '<b class="c-warnung">' + $nW + ' empfohlen</b>' }
+    if ($nH -gt 0) { $cnt += '<b class="c-hinweis">' + $nH + $(if ($nH -eq 1) { ' Hinweis' } else { ' Hinweise' }) + '</b>' }
+    $o += '<div class="verdict ' + $verdict.level + '"><div class="t">' + (Esc $verdict.title) + '</div><p class="x">' + (Esc $verdict.text) + '</p>'
+    if ($cnt.Count -gt 0) { $o += '<div class="n">' + ($cnt -join ' &middot; ') + '</div>' }
+    $o += '</div>'
+
+    # Anliegen (nur wenn im Technikermodus angegeben)
     if ($cu.symptoms.Count -gt 0) {
         $labels = @(); foreach ($k in $cu.symptoms) { if ($null -ne $script:SymptomInfo[$k]) { $labels += $script:SymptomInfo[$k].label } }
         $o += '<h2>Zu Ihrem Anliegen</h2><p>Sie haben angegeben: <b>' + (Esc ($labels -join ', ')) + '</b>.</p>'
         $sf = @(Get-SymptomFindings)
         if ($sf.Count -gt 0) {
-            $o += '<p>Dazu passt, was wir gefunden haben:</p><ul class="find">'
-            foreach ($f in ($sf | Select-Object -First 5)) { $o += '<li><span class="tag ' + $f.severity + '">' + (Esc $f.severity) + '</span><span>' + (Esc $f.customer) + '</span></li>' }
-            $o += '</ul>'
+            $o += '<p>Dazu passt, was wir gefunden haben:</p>'
+            foreach ($f in ($sf | Select-Object -First 5)) { $o += '<div class="item ' + $f.severity + '"><b>' + (Esc $f.title) + '</b><p>' + (Esc $f.customer) + '</p></div>' }
         } else { $o += '<p>Dazu hat die automatische Prüfung keine eindeutige Ursache gefunden. Das kommt bei gelegentlichen Problemen vor; wir schauen es uns gern genauer an.</p>' }
     }
+
+    # Überblick
+    $modStatus = @{}; foreach ($x in $script:D.modules) { $modStatus[$x.name] = $x.status }
+    $o += '<h2>Überblick</h2><table class="ov">'
+    foreach ($ra in $script:ReportAreas) {
+        if ($ra.battery -and -not $script:D.battery.present) { continue }
+        $hit = @(); foreach ($f in $sorted) { if ($ra.areas -contains $f.area -and ($f.severity -ne 'hinweis' -or $f.customer)) { $hit += $f } }
+        $failed = $false; foreach ($mn in $ra.modules) { if ($null -ne $modStatus[$mn] -and $modStatus[$mn] -ne 'ok') { $failed = $true } }
+        $lvl = 'ok'; $txt = $ra.ok
+        if ($hit.Count -gt 0) {
+            $lvl = $hit[0].severity
+            $titles = @(); foreach ($f in ($hit | Select-Object -First 2)) { $titles += (Esc $f.title) }
+            $txt = $titles -join ' &middot; '
+            if ($hit.Count -gt 2) { $txt += ' und ' + ($hit.Count - 2) + ' weitere' }
+        } elseif ($failed) { $lvl = 'na'; $txt = 'Konnte auf diesem PC nicht vollständig geprüft werden.' }
+        if ($hit.Count -eq 0 -and -not $failed -and $ra.battery) {
+            if ($null -ne $script:D.battery.healthPct) { $txt = 'Kapazität noch ' + (Num $script:D.battery.healthPct) + ' % vom Neuzustand.' } else { $txt = 'Keine Auffälligkeiten.' }
+        }
+        if ($hit.Count -eq 0) { $txt = Esc $txt }
+        $cls = $lvl; if ($lvl -eq 'na') { $cls = 'na' }
+        $o += '<tr><td class="a">' + (Esc $ra.label) + '</td><td class="s c-' + $cls + '"><span class="dot"></span>' + (Sev-Word $lvl) + '</td><td class="d">' + $txt + '</td></tr>'
+    }
+    $o += '</table>'
+
+    # Befunde
+    $groups = @(
+        @{ sev = 'kritisch'; head = 'Dringend'; lead = 'Diese Punkte sollten Sie bald angehen.' }
+        @{ sev = 'warnung'; head = 'Empfohlen'; lead = 'Kein Notfall, aber sinnvoll in den nächsten Wochen.' }
+        @{ sev = 'hinweis'; head = 'Gut zu wissen'; lead = '' }
+    )
+    $any = $false; foreach ($f in $sorted) { if ($f.customer) { $any = $true } }
+    $o += '<h2>Was wir gefunden haben</h2>'
+    if (-not $any) { $o += '<p>Keine Auffälligkeiten. Ihr PC ist in gutem Zustand.</p>' }
+    foreach ($g in $groups) {
+        $items = @(); foreach ($f in $sorted) { if ($f.severity -eq $g.sev -and $f.customer) { $items += $f } }
+        if ($items.Count -eq 0) { continue }
+        $max = 8; if ($g.sev -eq 'hinweis') { $max = 5 }
+        $o += '<h3>' + $g.head + '</h3>'
+        foreach ($f in ($items | Select-Object -First $max)) {
+            $o += '<div class="item ' + $f.severity + '"><b>' + (Esc $f.title) + '</b> <span class="ar">&middot; ' + (Esc $f.area) + '</span><p>' + (Esc $f.customer) + '</p></div>'
+        }
+        if ($items.Count -gt $max) { $o += '<p class="note">Weitere ' + ($items.Count - $max) + ' Punkte stehen im technischen Anhang.</p>' }
+    }
+
+    # Empfehlung
+    $o += '<h2>Unsere Empfehlung</h2>'
+    if ($recs.Count -eq 0) { $o += '<p>Aktuell gibt es nichts zu tun. Wir empfehlen den nächsten Check in sechs Monaten, also ab ' + (DateDe ((Get-Date).AddMonths(6))) + '.</p>' }
+    else {
+        $o += '<ol class="recs">'
+        foreach ($r in ($recs | Select-Object -First 5)) {
+            $when = ''; if ($r.urgency) { $when = ' &middot; Zeitpunkt: ' + (Esc $r.urgency) }
+            $o += '<li><b>' + (Esc $r.title) + '</b><div class="w">Anlass: ' + (Esc $r.because) + $when + '</div><div class="p">' + (Esc $r.price) + '</div></li>'
+        }
+        $o += '</ol><p class="note">Preise wie auf ' + (Esc $Solux.web) + '. Fernwartung 29 &euro; je 30 Minuten, vor Ort 59 &euro; je Stunde (Abrechnung im 15-Minuten-Takt) zuzüglich Anfahrt und Material. Vor jedem Auftrag sprechen wir den Umfang mit Ihnen ab.</p>'
+    }
+
+    # Vergleich
     $cmp = $script:D.compare
     if ($cmp -and $cmp.rows.Count -gt 0) {
         $o += '<h2>Vergleich mit dem letzten Check' + $(if ($cmp.date) { ' vom ' + (Esc (DateDe $cmp.date)) } else { '' }) + '</h2>'
-        $o += '<table><tr><th>Wert</th><th>Vorher</th><th>Jetzt</th><th>Entwicklung</th></tr>'
+        $o += '<table class="cmp"><tr><th>Wert</th><th>Vorher</th><th>Jetzt</th><th>Entwicklung</th></tr>'
         foreach ($r in $cmp.rows) {
-            $cls = 'hinweis'; if ($r.trend -eq 'besser') { $cls = 'ok' } elseif ($r.trend -eq 'schlechter') { $cls = 'warnung' }
-            $o += '<tr><td>' + (Esc $r.what) + '</td><td>' + (Esc ((Num $r.before) + $r.unit)) + '</td><td>' + (Esc ((Num $r.now) + $r.unit)) + '</td><td><span class="tag ' + $cls + '">' + (Esc $r.trend) + '</span></td></tr>'
+            $cls = 'na'; $word = 'unverändert'
+            if ($r.trend -eq 'besser') { $cls = 'ok'; $word = '&#8599; besser' } elseif ($r.trend -eq 'schlechter') { $cls = 'warnung'; $word = '&#8600; schlechter' }
+            $o += '<tr><td>' + (Esc $r.what) + '</td><td>' + (Esc ((Num $r.before) + $r.unit)) + '</td><td>' + (Esc ((Num $r.now) + $r.unit)) + '</td><td class="c-' + $cls + '">' + $word + '</td></tr>'
         }
         $o += '</table>'
     }
-    $rank = @{ 'kritisch' = 0; 'warnung' = 1; 'hinweis' = 2 }
-    $cust = @(); foreach ($f in (Sort-Findings $script:Findings)) { if ($f.customer -and $f.severity -ne 'hinweis') { $cust += $f } }
-    foreach ($f in (Sort-Findings $script:Findings)) { if ($f.customer -and $f.severity -eq 'hinweis' -and $cust.Count -lt 6) { $cust += $f } }
-    $o += '<h2>Das ist uns aufgefallen</h2>'
-    if ($cust.Count -eq 0) { $o += '<p>Keine Auffälligkeiten.</p>' }
-    else {
-        $o += '<ul class="find">'
-        foreach ($f in ($cust | Select-Object -First 10)) { $o += '<li><span class="tag ' + $f.severity + '">' + (Esc $f.severity) + '</span><span>' + (Esc $f.customer) + '</span></li>' }
-        $o += '</ul>'
-        if ($cust.Count -gt 10) { $o += '<p class="meta">Weitere ' + ($cust.Count - 10) + ' Punkte stehen im technischen Anhang.</p>' }
+
+    # So geht es weiter
+    $o += '<div class="next"><h2>So geht es weiter</h2><p>Melden Sie sich gern, wir besprechen den Bericht kostenlos mit Ihnen. Nennen Sie dabei die Berichtsnummer <b>' + (Esc $m.reportId) + '</b>.</p><div class="cols">'
+    if ($Config.Phone) {
+        $intl = Phone-Intl $Config.Phone
+        $o += '<div><div class="k">Anrufen</div><div class="v"><a href="tel:+' + $intl + '">' + (Esc $Config.Phone) + '</a></div></div>'
+        $o += '<div><div class="k">WhatsApp</div><div class="v"><a href="https://wa.me/' + $intl + '">' + (Esc $Config.Phone) + '</a></div></div>'
     }
-    $o += '<h2>Unsere Empfehlung</h2>'
-    if ($recs.Count -eq 0) { $o += '<p>Aktuell nichts zu tun. Wir empfehlen den nächsten Check in 6 Monaten (ab ' + (DateDe ((Get-Date).AddMonths(6))) + ').</p>' }
-    else { foreach ($r in ($recs | Select-Object -First 3)) { $o += '<div class="rec"><b>' + (Esc $r.title) + '</b><span>Wann: ' + (Esc $r.urgency) + ' &middot; Anlass: ' + (Esc $r.because) + ' &middot; ' + (Esc $r.price) + '</span></div>' } }
-    $good = @()
-    $act = $false; foreach ($a in $script:D.security.av) { if ($a.enabled) { $act = $true } }
-    if ($act) { $good += 'Virenschutz ist aktiv.' }
-    $diskBad = $false; foreach ($f in $script:Findings) { if ($f.area -eq 'Datenträger' -and $f.severity -ne 'hinweis') { $diskBad = $true } }
-    if (-not $diskBad -and $script:D.storage.disks.Count -gt 0) { $good += 'Die Laufwerke melden keine Fehler.' }
-    if ($script:D.stability.bsods.Count -eq 0) { $good += 'Keine Bluescreens in den letzten ' + $Days + ' Tagen.' }
-    if ($script:D.backup.any) { $good += 'Eine Datensicherung ist eingerichtet.' }
-    if ($good.Count -gt 0) { $o += '<h2>Gut zu wissen</h2><ul>'; foreach ($g in $good) { $o += '<li>' + (Esc $g) + '</li>' }; $o += '</ul>' }
-    $o += '<div class="foot"><b>' + (Esc $Solux.name) + '</b> &middot; ' + (Esc $Solux.people) + ' &middot; ' + (Esc $Solux.street) + ', ' + (Esc $Solux.city) + ' &middot; ' + (Esc $Solux.mail) + $(if ($Config.Phone) { ' &middot; ' + (Esc $Config.Phone) } else { '' }) + '<br>Automatische Erstdiagnose, ersetzt keine Prüfung vor Ort. Das Programm hat nur gelesen und nichts verändert. Bitte nennen Sie bei Rückfragen die Berichtsnummer ' + (Esc $m.reportId) + '.</div>'
+    $o += '<div><div class="k">E-Mail</div><div class="v"><a href="mailto:' + (Esc $Solux.mail) + '?subject=PC-Check%20' + (Esc $m.reportId) + '">' + (Esc $Solux.mail) + '</a></div></div>'
+    $o += '</div></div>'
+    $o += '<div class="foot"><b>' + (Esc $Solux.name) + '</b> &middot; ' + (Esc $Solux.people) + ' &middot; ' + (Esc $Solux.street) + ', ' + (Esc $Solux.city) + ' &middot; ' + (Esc $Solux.web) + '<br>Automatische Erstdiagnose, ersetzt keine Prüfung vor Ort. Das Programm hat nur gelesen und nichts verändert.</div>'
 
     # Technischer Anhang
-    $o += '<div class="annex"><div class="brand">Technischer Anhang</div><h1>Prüfprotokoll</h1>'
-    $o += '<div class="meta">Skript ' + (Esc $m.tool) + ' ' + (Esc $m.version) + ' &middot; Sprachmodus ' + (Esc $m.languageMode) + ' &middot; Adminrechte: ' + (JaNein $m.isAdmin) + ' &middot; Dauer ' + (Esc $m.durationSec) + ' s</div>'
+    $o += '<div class="annex"><div class="eyebrow">Technischer Anhang</div><h1>Prüfprotokoll</h1>'
+    $o += '<div class="dev">Bericht ' + (Esc $m.reportId) + ' &middot; Skript ' + (Esc $m.tool) + ' ' + (Esc $m.version) + ' &middot; Sprachmodus ' + (Esc $m.languageMode) + ' &middot; Adminrechte: ' + (JaNein $m.isAdmin) + ' &middot; Dauer ' + (Esc $m.durationSec) + ' s</div>'
     if ($cu.name -or $cu.phone -or $cu.code -or $cu.symptoms.Count) { $o += '<table>' + (Row 'Kunde' $cu.name) + (Row 'Telefon' $cu.phone) + (Row 'Kundencode' $cu.code) + (Row 'Anliegen' ($cu.symptoms -join ', ')) + (Row 'Modus' $m.mode) + '</table>' }
     if (-not $m.isAdmin) { $o += '<p><b>Eingeschränkte Prüfung:</b> Ohne Adminrechte fehlen BitLocker, TPM, SMART-Werte der Laufwerke und Teile der Ereignisprotokolle.</p>' }
     $o += '<h2>Alle Befunde</h2><table><tr><th>Stufe</th><th>Bereich</th><th>Befund</th><th>Details</th></tr>'
-    foreach ($f in (Sort-Findings $script:Findings)) { $o += '<tr><td><span class="tag ' + $f.severity + '">' + (Esc $f.severity) + '</span></td><td>' + (Esc $f.area) + '</td><td>' + (Esc $f.title) + '</td><td>' + (Esc $f.detail) + '</td></tr>' }
+    foreach ($f in $sorted) { $o += '<tr><td class="sev c-' + $f.severity + '">' + (Esc $f.severity) + '</td><td>' + (Esc $f.area) + '</td><td>' + (Esc $f.title) + '</td><td>' + (Esc $f.detail) + '</td></tr>' }
     $o += '</table>'
     $o += '<h2>System</h2><table>'
     $o += Row 'Gerät' ($s.manufacturer + ' ' + $s.model)
@@ -1559,7 +1686,6 @@ if (-not $OutDir) {
 
 if ($Interactive -and -not $Elevated) {
     Show-Intro
-    Ask-Customer
 }
 
 if (-not $IsAdmin -and -not $NoElevate -and -not $Elevated) {
@@ -1674,7 +1800,7 @@ if ($saved -and -not $NoUpload -and -not $Technician) {
     if ($Config.UploadUrl) {
         if ($Interactive -or $Accepted) {
             Line 'Wir senden den Bericht verschlüsselt an Solux IT. Enthalten sind Geräte- und Systemdaten,' 'Gray'
-            Line 'die Programmliste und Ihre Angaben oben, aber keine persönlichen Dateien.' 'Gray'
+            Line 'und die Programmliste, aber keine persönlichen Dateien.' 'Gray'
             $askSend = Ask-YesNo 'Bericht jetzt an Solux IT senden?' $true
         } else { $askSend = $false }
         if ($askSend) {
