@@ -3183,3 +3183,9 @@ body.home-entry-refined .care-section{padding-block:28px!important}
   .related-grid .service-card-link{font-size:13px}
   .occasion-chips{font-size:14px}
 }
+/* Tippflächen mindestens 24 px (WCAG 2.5.8): Kontaktblock, Datenschutz-Haken, Footer */
+.contact-side-note div>a{display:flex;align-items:center;min-height:28px;margin-top:0}
+.contact-side-note .enquiry-whatsapp{gap:6px}
+.check-label input{flex:none;width:20px;height:20px;margin-top:0}
+.footer-mail{display:inline-flex;align-items:center;min-height:28px}
+.footer-bottom div a{display:inline-flex;align-items:center;min-height:28px}
