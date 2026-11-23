@@ -3251,3 +3251,44 @@ body.site-refined .footer-bottom{border-top-color:var(--tt-dunkel-linie);font-si
 body.site-refined .tech-source-footer p{color:#8aa1b3}
 @media(max-width:650px){body.site-refined .faq-item summary{padding:0 16px;font-size:15px}body.site-refined .faq-item>p{margin:0 16px 18px}body.site-refined .footer-label{font-size:14px}body.site-refined .footer-top>div:not(:first-child) a,body.site-refined .footer-top>div:not(:first-child) p,body.site-refined .footer-intro p{font-size:14px}}
 @media(prefers-reduced-motion:reduce){body.site-refined .faq-item,body.site-refined .tech-brand,body.site-refined .footer-cta a span{transition:none}}
+
+/* Preisliste im Zwei-Ton: IT-Service hell, Digitale Projekte dunkel (wie der Flyer) */
+body.site-refined .pl-panels{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:20px;align-items:stretch}
+body.site-refined .pl-panel{display:flex;flex-direction:column;border-radius:14px;padding:34px 34px 28px}
+body.site-refined .pl-panel--hell{background:#fff;border:1px solid #d9e7f1;color:#0d2236}
+body.site-refined .pl-panel--dunkel{background:radial-gradient(90% 60% at 100% 0%,#14365a 0%,transparent 60%),var(--tt-dunkel);color:var(--tt-text-hell)}
+body.site-refined .pl-head{display:grid;gap:6px;padding-bottom:20px;border-bottom:2px solid currentColor}
+body.site-refined .pl-head h3{font-size:24px;font-weight:650;letter-spacing:-.02em;margin:0}
+body.site-refined .pl-head p{margin:0;font-size:15px;line-height:1.6;color:#4f6577}
+body.site-refined .pl-panel--dunkel .pl-head p{color:var(--tt-text-gedämpft)}
+body.site-refined .pl-list{list-style:none;margin:0;padding:0;flex:1}
+body.site-refined .pl-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:baseline;padding:16px 0;border-bottom:1px solid #e3edf4}
+body.site-refined .pl-panel--dunkel .pl-row{border-bottom-color:var(--tt-dunkel-linie)}
+body.site-refined .pl-name h4{margin:0;font-size:17px;font-weight:600;line-height:1.4}
+body.site-refined .pl-name p{margin:3px 0 0;font-size:14px;line-height:1.55;color:#4f6577}
+body.site-refined .pl-panel--dunkel .pl-name p{color:var(--tt-text-gedämpft)}
+body.site-refined .pl-price{text-align:right;white-space:nowrap}
+body.site-refined .pl-price strong{display:block;font-size:22px;font-weight:650;letter-spacing:-.02em;line-height:1.2;font-variant-numeric:tabular-nums}
+body.site-refined .pl-price span{display:block;font-size:13px;line-height:1.5;color:#4f6577;margin-top:2px}
+body.site-refined .pl-panel--dunkel .pl-price span{color:var(--tt-text-gedämpft)}
+body.site-refined .pl-panel--dunkel .pl-price strong{color:#fff}
+body.site-refined .pl-foot{display:grid;gap:12px;padding-top:22px}
+body.site-refined .pl-foot p{margin:0;font-size:13px;line-height:1.6;color:#4f6577}
+body.site-refined .pl-panel--dunkel .pl-foot p{color:var(--tt-text-gedämpft)}
+body.site-refined .pl-cta{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;padding:0 20px;border-radius:8px;font-size:15px;font-weight:600;background:var(--tt-dunkel);color:#fff;transition:background-color .2s ease}
+body.site-refined .pl-cta:hover{background:#123248}
+body.site-refined .pl-panel--dunkel .pl-cta{background:#fff;color:var(--tt-dunkel)}
+body.site-refined .pl-panel--dunkel .pl-cta:hover{background:#e3f1fa}
+body.site-refined .pl-panel--hell .pl-cta .button-image-icon{filter:brightness(0) invert(1)}
+body.site-refined .price-more{display:grid;gap:12px;margin-top:28px}
+body.site-refined .price-more .rate-details{border:1px solid #d9e7f1;border-radius:10px;background:#ffffffb3}
+body.site-refined .price-more .rate-details[open]{background:#fff;box-shadow:inset 0 -2px 0 var(--tt-dunkel),0 10px 26px #0716290d}
+body.site-refined .price-more .rate-details summary{padding:0 22px;min-height:64px;align-items:center;font-size:16px;font-weight:600}
+body.site-refined .price-more .rate-detail-list{padding:0 22px 18px}
+body.site-refined .price-notes{display:grid;gap:6px;margin-top:22px}
+body.site-refined .price-editorial .price-notes p{margin:0;font-size:13px;line-height:1.7;color:#4f6577;max-width:none}
+body.site-refined .price-editorial .price-notes .rate-tax{margin:0}
+body.site-refined .care-section{padding-top:0!important}
+@media(max-width:900px){body.site-refined .pl-panels{grid-template-columns:1fr}}
+@media(max-width:600px){body.site-refined .pl-panel{padding:24px 18px 20px;border-radius:12px}body.site-refined .pl-row{gap:14px;padding:14px 0}body.site-refined .pl-name h4{font-size:16px}body.site-refined .pl-name p{font-size:13px}body.site-refined .pl-price strong{font-size:19px}body.site-refined .pl-price span{font-size:12px}body.site-refined .price-more .rate-details summary{padding:0 16px;font-size:15px}body.site-refined .price-more .rate-detail-list{padding:0 16px 14px}}
+@media(prefers-reduced-motion:reduce){body.site-refined .pl-cta{transition:none}}
