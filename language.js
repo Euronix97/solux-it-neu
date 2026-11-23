@@ -612,6 +612,7 @@
   "Die Arbeit beginnt erst nach Ihrer Zustimmung.": "Work starts only after your approval.",
   "Ihre Anfrage ist unverbindlich und noch kein Auftrag.": "Your enquiry is non-binding and does not place an order.",
   "Anfrage stellen": "Send an enquiry",
+  "01520 6943576 anrufen": "Call 01520 6943576",
   "Die Werkzeuge hinter unseren Lösungen – für persönlichen IT-Support, digitale Projekte und automatisierte Abläufe.": "The tools behind our solutions — for personal IT support, digital projects and automated workflows.",
   "Bitte Thema wählen": "Please choose a topic",
   "PC & Laptop": "PC & laptop",
